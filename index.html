@@ -1,0 +1,823 @@
+<html><head><base href="." /><title>Modern QR Code Generator</title><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+<style>
+:root {
+  --primary: #6200ee;
+  --primary-dark: #3700b3;
+  --surface: #ffffff;
+  --on-surface: #000000;
+  --background: #f5f5f5;
+  --shadow: rgba(0,0,0,0.1);
+  --border-radius: 16px;
+}
+
+[data-theme="dark"] {
+  --primary: #bb86fc;
+  --primary-dark: #3700b3;
+  --surface: #121212;
+  --on-surface: #ffffff;
+  --background: #1e1e1e;
+  --shadow: rgba(0,0,0,0.3);
+}
+
+* {
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: var(--background);
+  color: var(--on-surface);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  width: 100%;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--border-radius);
+  padding: 32px;
+  box-shadow: 0 8px 16px var(--shadow);
+  margin-bottom: 20px;
+  animation: fadeIn 0.5s ease;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.theme-toggle {
+  background: var(--surface);
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.input-group {
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--on-surface);
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--shadow);
+  border-radius: var(--border-radius);
+  background: var(--surface);
+  color: var(--on-surface);
+  font-size: 16px;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-dark);
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin: 32px 0;
+  position: relative;
+}
+
+.qr-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 50%;
+  background: white;
+  padding: 8px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px var(--shadow);
+  width: fit-content;
+}
+
+.button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--shadow);
+}
+
+.material-icons {
+  font-size: 20px;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.file-input-wrapper {
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+.file-input {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.file-buttons {
+  display: flex;
+  gap: 12px;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.buttons-container {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.qr-preview {
+  padding: 16px;
+  border-radius: var(--border-radius);
+  background: var(--background);
+  box-shadow: inset 0 2px 8px var(--shadow);
+}
+
+.material-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  background: var(--background);
+  border-radius: var(--border-radius);
+  margin-top: 12px;
+}
+
+.material-icon-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--surface);
+  transition: all 0.2s ease;
+}
+
+.material-icon-option:hover {
+  background: var(--primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.tab-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  background: var(--surface);
+  border: 2px solid var(--shadow);
+}
+
+.tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.scanner-container {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+#scanner {
+  width: 100%;
+  border-radius: var(--border-radius);
+  background: #000;
+  aspect-ratio: 4/3;
+}
+
+#scanResult {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--border-radius);
+  display: none;
+}
+
+.shape-options {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.shape-option {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.shape-option.active {
+  background: var(--primary);
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 20px;
+  }
+  
+  .buttons-container {
+    flex-direction: column;
+  }
+  
+  .buttons-container .button {
+    width: 100%;
+  }
+  
+  .header {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>QR Code Generator</h1>
+    <button class="theme-toggle" id="themeToggle">
+      <span class="material-icons">dark_mode</span>
+    </button>
+  </div>
+  
+  <div class="card">
+    <div class="input-group">
+      <label for="content">Content</label>
+      <input type="text" id="content" placeholder="Enter text or URL" value="https://example.com">
+    </div>
+
+    <div class="input-group">
+      <label for="qrType">QR Code Type</label>
+      <select id="qrType">
+        <option value="url">URL</option>
+        <option value="text">Plain Text</option>
+        <option value="email">Email</option>
+        <option value="phone">Phone Number</option>
+        <option value="sms">SMS</option>
+        <option value="wifi">Wi-Fi Network</option>
+        <option value="geo">Geolocation</option>
+        <option value="event">Calendar Event</option>
+        <option value="social">Social Media</option>
+      </select>
+    </div>
+
+    <div id="dynamicInputs" class="options-grid">
+      <div class="input-group" data-type="url">
+        <label for="urlInput">URL</label>
+        <input type="url" id="urlInput" placeholder="https://example.com">
+      </div>
+      
+      <div class="input-group" data-type="text" style="display:none">
+        <label for="textInput">Text</label>
+        <input type="text" id="textInput" placeholder="Enter your text">
+      </div>
+      
+      <div class="input-group" data-type="email" style="display:none">
+        <label for="emailAddress">Email Address</label>
+        <input type="email" id="emailAddress" placeholder="example@email.com">
+        <label for="emailSubject">Subject</label>
+        <input type="text" id="emailSubject" placeholder="Email Subject">
+        <label for="emailBody">Body</label>
+        <textarea id="emailBody" placeholder="Email content..."></textarea>
+      </div>
+      
+      <div class="input-group" data-type="phone" style="display:none">
+        <label for="phoneNumber">Phone Number</label>
+        <input type="tel" id="phoneNumber" placeholder="+1234567890">
+      </div>
+      
+      <div class="input-group" data-type="sms" style="display:none">
+        <label for="phoneNumber">Phone Number</label>
+        <input type="tel" id="phoneNumber" placeholder="+1234567890">
+        <label for="smsMessage">Message</label>
+        <textarea id="smsMessage" placeholder="SMS message..."></textarea>
+      </div>
+      
+      <div class="input-group" data-type="wifi" style="display:none">
+        <label for="ssid">Network Name (SSID)</label>
+        <input type="text" id="ssid" placeholder="Network name">
+        <label for="wifiPassword">Password</label>
+        <input type="password" id="wifiPassword" placeholder="Network password">
+        <label for="encryption">Encryption</label>
+        <select id="encryption">
+          <option value="WPA">WPA/WPA2</option>
+          <option value="WEP">WEP</option>
+          <option value="nopass">No Encryption</option>
+        </select>
+      </div>
+      
+      <div class="input-group" data-type="geo" style="display:none">
+        <label for="latitude">Latitude</label>
+        <input type="number" id="latitude" placeholder="Latitude" step="0.000001">
+        <label for="longitude">Longitude</label>
+        <input type="number" id="longitude" placeholder="Longitude" step="0.000001">
+      </div>
+      
+      <div class="input-group" data-type="event" style="display:none">
+        <label for="eventTitle">Event Title</label>
+        <input type="text" id="eventTitle" placeholder="Event Title">
+        <label for="startDate">Start Date</label>
+        <input type="datetime-local" id="startDate">
+        <label for="endDate">End Date</label>
+        <input type="datetime-local" id="endDate">
+        <label for="eventLocation">Location</label>
+        <input type="text" id="eventLocation" placeholder="Event Location">
+      </div>
+      
+      <div class="input-group" data-type="social" style="display:none">
+        <label for="socialUrl">Social Media URL</label>
+        <input type="url" id="socialUrl" placeholder="https://twitter.com/username">
+      </div>
+    </div>
+    
+    <div class="options-grid">
+      <div class="input-group">
+        <label for="size">Size</label>
+        <select id="size">
+          <option value="100">100x100</option>
+          <option value="200" selected>200x200</option>
+          <option value="300">300x300</option>
+          <option value="400">400x400</option>
+          <option value="500">500x500</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label for="foreground">Foreground Color</label>
+        <input type="color" id="foreground" value="#000000">
+      </div>
+      
+      <div class="input-group">
+        <label for="background">Background Color</label>
+        <input type="color" id="background" value="#ffffff">
+      </div>
+      
+      <div class="input-group">
+        <label for="level">Error Correction</label>
+        <select id="level">
+          <option value="L">Low</option>
+          <option value="M" selected>Medium</option>
+          <option value="Q">Quartile</option>
+          <option value="H">High</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Center Icon</label>
+        <div class="tab-container">
+          <div class="tab active" data-tab="file">Custom Image</div>
+          <div class="tab" data-tab="material">Material Icon</div>
+        </div>
+        
+        <div id="fileInput" class="file-input-wrapper">
+          <div class="file-buttons">
+            <label for="centerImage" class="button">
+              <span class="material-icons">image</span>
+              Choose Image
+            </label>
+            <button class="button" id="clearImage">
+              <span class="material-icons">clear</span>
+              Clear Image
+            </button>
+          </div>
+          <input type="file" id="centerImage" class="file-input" accept="image/*">
+        </div>
+        
+        <div id="materialIcons" class="material-icon-grid" style="display: none;">
+          <div class="material-icon-option"><span class="material-icons">favorite</span></div>
+          <div class="material-icon-option"><span class="material-icons">star</span></div>
+          <div class="material-icon-option"><span class="material-icons">face</span></div>
+          <div class="material-icon-option"><span class="material-icons">pets</span></div>
+          <div class="material-icon-option"><span class="material-icons">local_cafe</span></div>
+          <div class="material-icon-option"><span class="material-icons">restaurant</span></div>
+          <div class="material-icon-option"><span class="material-icons">shopping_cart</span></div>
+          <div class="material-icon-option"><span class="material-icons">flight</span></div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="iconSize">Icon Size (%)</label>
+        <input type="range" id="iconSize" min="10" max="30" value="20" step="5">
+      </div>
+    </div>
+    
+    <div class="buttons-container">
+      <button class="button" id="generate">
+        <span class="material-icons">qr_code_2</span>
+        Generate QR Code
+      </button>
+      
+      <button class="button" id="download">
+        <span class="material-icons">download</span>
+        Download QR Code
+      </button>
+    </div>
+    
+    <div class="qr-container">
+      <div class="qr-preview">
+        <canvas id="qr"></canvas>
+      </div>
+      <img id="centerOverlay" class="qr-overlay">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Batch QR Code Generation</h2>
+    <div class="input-group">
+      <label for="csvFile">Upload CSV File</label>
+      <input type="file" id="csvFile" accept=".csv,.xlsx">
+      <button class="button" id="processBatch">
+        <span class="material-icons">batch_prediction</span>
+        Generate Batch
+      </button>
+    </div>
+    <div id="batchPreview" class="qr-grid"></div>
+  </div>
+
+  <div class="card">
+    <h2>QR Code Scanner</h2>
+    <div class="scanner-container">
+      <video id="scanner" playsinline></video>
+      <div id="scanResult"></div>
+      <button class="button" id="startScan">
+        <span class="material-icons">qr_code_scanner</span>
+        Start Scanner
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let qr;
+let centerImage = null;
+let selectedMaterialIcon = null;
+let scanner = null;
+
+const QR_TYPE_FORMATS = {
+  url: (data) => data.urlInput,
+  text: (data) => data.textInput,
+  email: (data) => `mailto:${data.emailAddress}?subject=${encodeURIComponent(data.emailSubject)}&body=${encodeURIComponent(data.emailBody)}`,
+  phone: (data) => `tel:${data.phoneNumber}`,
+  sms: (data) => `smsto:${data.phoneNumber}:${encodeURIComponent(data.smsMessage)}`,
+  wifi: (data) => `WIFI:T:${data.encryption};S:${data.ssid};P:${data.wifiPassword};;`,
+  geo: (data) => `geo:${data.latitude},${data.longitude}`,
+  event: (data) => {
+    const start = new Date(data.startDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const end = new Date(data.endDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    return `BEGIN:VEVENT\nSUMMARY:${data.eventTitle}\nDTSTART:${start}\nDTEND:${end}\nLOCATION:${data.eventLocation}\nEND:VEVENT`;
+  },
+  social: (data) => data.socialUrl
+};
+
+document.getElementById('qrType').addEventListener('change', (e) => {
+  document.querySelectorAll('#dynamicInputs > div').forEach(div => {
+    div.style.display = 'none';
+  });
+  
+  const selectedType = e.target.value;
+  const targetDiv = document.querySelector(`#dynamicInputs > div[data-type="${selectedType}"]`);
+  if (targetDiv) {
+    targetDiv.style.display = 'block';
+  }
+});
+
+function getQRData() {
+  const type = document.getElementById('qrType').value;
+  const data = {};
+  
+  document.querySelectorAll(`#dynamicInputs > div[data-type="${type}"] input, #dynamicInputs > div[data-type="${type}"] textarea`).forEach(input => {
+    data[input.id] = input.value;
+  });
+  
+  return QR_TYPE_FORMATS[type](data);
+}
+
+function initQR() {
+  qr = new QRious({
+    element: document.getElementById('qr'),
+    value: getQRData(),
+    size: parseInt(document.getElementById('size').value),
+    foreground: document.getElementById('foreground').value,
+    background: document.getElementById('background').value,
+    level: document.getElementById('level').value
+  });
+  updateCenterImage();
+}
+
+function updateQR() {
+  qr.value = getQRData();
+  qr.size = parseInt(document.getElementById('size').value);
+  qr.foreground = document.getElementById('foreground').value;
+  qr.background = document.getElementById('background').value;
+  qr.level = document.getElementById('level').value;
+  updateCenterImage();
+}
+
+function createMaterialIconImage(iconName) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const size = 100;
+  canvas.width = size;
+  canvas.height = size;
+  
+  ctx.fillStyle = 'white';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = document.getElementById('foreground').value;
+  ctx.font = `${size * 0.6}px 'Material Icons'`; 
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(iconName, size/2, size/2);
+  
+  return canvas.toDataURL('image/png');
+}
+
+function updateCenterImage() {
+  const overlay = document.getElementById('centerOverlay');
+  const size = parseInt(document.getElementById('iconSize').value);
+  
+  overlay.style.width = `${size}%`;
+  
+  if (selectedMaterialIcon) {
+    overlay.src = createMaterialIconImage(selectedMaterialIcon);
+    overlay.style.display = 'block';
+  } else if (centerImage) {
+    overlay.src = centerImage;
+    overlay.style.display = 'block';
+  } else {
+    overlay.style.display = 'none';
+  }
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    
+    if (tab.dataset.tab === 'file') {
+      document.getElementById('fileInput').style.display = 'block';
+      document.getElementById('materialIcons').style.display = 'none';
+    } else {
+      document.getElementById('fileInput').style.display = 'none';
+      document.getElementById('materialIcons').style.display = 'grid';
+    }
+  });
+});
+
+document.querySelectorAll('.material-icon-option').forEach(option => {
+  option.addEventListener('click', () => {
+    const iconName = option.querySelector('.material-icons').textContent;
+    selectedMaterialIcon = iconName;
+    centerImage = null;
+    updateCenterImage();
+  });
+});
+
+document.querySelector('label[for="centerImage"]').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('centerImage').click();
+});
+
+document.getElementById('centerImage').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        centerImage = event.target.result;
+        selectedMaterialIcon = null;
+        updateCenterImage();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Please select an image file');
+      e.target.value = '';
+    }
+  }
+});
+
+document.getElementById('generate').addEventListener('click', updateQR);
+
+document.getElementById('download').addEventListener('click', () => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const size = parseInt(document.getElementById('size').value);
+  canvas.width = size;
+  canvas.height = size;
+  
+  ctx.drawImage(document.getElementById('qr'), 0, 0);
+  
+  const overlay = document.getElementById('centerOverlay');
+  if (overlay.style.display !== 'none') {
+    const iconSize = size * (parseInt(document.getElementById('iconSize').value) / 100);
+    const x = (size - iconSize) / 2;
+    const y = (size - iconSize) / 2;
+    
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(size/2, size/2, iconSize/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.drawImage(overlay, x, y, iconSize, iconSize);
+  }
+  
+  const link = document.createElement('a');
+  link.download = 'qrcode.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+document.getElementById('clearImage').addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  centerImage = null;
+  selectedMaterialIcon = null;
+  document.getElementById('centerImage').value = '';
+  updateCenterImage();
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  
+  const icon = document.querySelector('#themeToggle .material-icons');
+  icon.textContent = newTheme === 'dark' ? 'light_mode' : 'dark_mode';
+});
+
+document.getElementById('startScan').addEventListener('click', async () => {
+  const scannerVideo = document.getElementById('scanner');
+  const scanResult = document.getElementById('scanResult');
+  const startScanBtn = document.getElementById('startScan');
+  
+  if (scanner) {
+    // Stop scanning
+    const stream = scannerVideo.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach(track => track.stop());
+    scannerVideo.srcObject = null;
+    scanner = null;
+    startScanBtn.innerHTML = '<span class="material-icons">qr_code_scanner</span> Start Scanner';
+    scanResult.style.display = 'none';
+    return;
+  }
+  
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        facingMode: "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      } 
+    });
+    
+    scannerVideo.srcObject = stream;
+    await scannerVideo.play();
+    
+    startScanBtn.innerHTML = '<span class="material-icons">stop</span> Stop Scanner';
+    
+    // Wait for video to be ready
+    await new Promise((resolve) => {
+      scannerVideo.addEventListener('loadedmetadata', () => {
+        // Set canvas size to match video
+        const canvas = document.createElement('canvas');
+        canvas.width = scannerVideo.videoWidth;
+        canvas.height = scannerVideo.videoHeight;
+        resolve();
+      });
+    });
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    const scan = () => {
+      if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+        canvas.width = scannerVideo.videoWidth;
+        canvas.height = scannerVideo.videoHeight;
+        context.drawImage(scannerVideo, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+          scanResult.style.display = 'block';
+          scanResult.innerHTML = `
+            <p><strong>Scanned QR Code:</strong></p>
+            <p>${code.data}</p>
+            ${code.data.startsWith('http') ? `
+              <button class="button" onclick="window.open('${code.data}', '_blank')">
+                <span class="material-icons">open_in_new</span>
+                Open Link
+              </button>
+            ` : ''}
+          `;
+        }
+      }
+      
+      if (scanner) {
+        requestAnimationFrame(scan);
+      }
+    };
+    
+    scanner = true;
+    scan();
+    
+  } catch (error) {
+    console.error('Error accessing camera:', error);
+    alert('Unable to access camera. Please make sure you have granted camera permissions.');
+    startScanBtn.innerHTML = '<span class="material-icons">qr_code_scanner</span> Start Scanner';
+  }
+});
+
+window.addEventListener('load', initQR);
+
+['content', 'size', 'foreground', 'background', 'level', 'iconSize'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateQR);
+});
+</script>
+</body></html>
